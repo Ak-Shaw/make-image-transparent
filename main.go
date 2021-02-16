@@ -191,7 +191,10 @@ func makeBackgroundTransparent(img *image.Image) (bool, *image.RGBA) {
 	imageRGBA := image.NewRGBA(imageData.Bounds())
 	draw.Draw(imageRGBA, imageData.Bounds(), imageData, image.ZP, draw.Src)
 	if imageRGBA.Opaque() {
-		backgroundColor := imageRGBA.RGBAAt(0, 0)
+		backgroundColor, err := ParseHexColor("#D9D9D9")
+		if err != nil {
+			logAndExit("error", err)
+		}
 		bounds := imageRGBA.Bounds()
 		width := bounds.Dx()
 		height := bounds.Dy()
@@ -207,6 +210,24 @@ func makeBackgroundTransparent(img *image.Image) (bool, *image.RGBA) {
 		return true, imageRGBA
 	}
 	return false, nil
+}
+
+func ParseHexColor(s string) (c color.RGBA, err error) {
+    c.A = 0xff
+    switch len(s) {
+    case 7:
+        _, err = fmt.Sscanf(s, "#%02x%02x%02x", &c.R, &c.G, &c.B)
+    case 4:
+        _, err = fmt.Sscanf(s, "#%1x%1x%1x", &c.R, &c.G, &c.B)
+        // Double the hex digits:
+        c.R *= 17
+        c.G *= 17
+        c.B *= 17
+    default:
+        err = fmt.Errorf("invalid length, must be 7 or 4")
+
+    }
+    return
 }
 
 func main() {
